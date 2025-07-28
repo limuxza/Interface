@@ -16,24 +16,6 @@ function Linux.Instance(class, props)
     return inst
 end
 
-function Linux:PlaySound(soundId)
-    spawn(function()
-        local success, sound = pcall(function()
-            local s = Instance.new("Sound")
-            s.SoundId = "rbxassetid://" .. tostring(soundId)
-            s.Volume = 0.5
-            s.Parent = workspace
-            s:Play()                        
-            task.delay(5, function()
-                if s and s.Parent then
-                    s:Destroy()
-                end
-            end)                        
-            return s
-        end)                
-    end)
-end
-
 function Linux:SafeCallback(Function, ...)
     if not Function then
         return
@@ -50,7 +32,6 @@ function Linux:SafeCallback(Function, ...)
 end
 
 function Linux:Notify(config)
-    self:PlaySound("654933978")        
     local isMobile = InputService.TouchEnabled and not InputService.KeyboardEnabled
     local notificationWidth = isMobile and 200 or 300
     local notificationHeight = config.SubContent and 80 or 60
@@ -1330,7 +1311,6 @@ function Linux.Create(config)
             end)                        
 
             Btn.MouseButton1Click:Connect(function()
-                Linux:PlaySound("8968249849")
                 spawn(function() Linux:SafeCallback(config.Callback) end)
             end)                        
 
@@ -1471,7 +1451,6 @@ function Linux.Create(config)
             local function SetValue(newState)
                 Toggle:SetAttribute("State", newState)
                 UpdateToggle(Toggle)
-                Linux:PlaySound("7761034230")
                 spawn(function() Linux:SafeCallback(config.Callback, newState) end)
             end                        
 
@@ -2797,12 +2776,13 @@ function Linux.Create(config)
             end
         })
 
-        SettingsTab.Section({Name = "Auto Load"})
+        SettingsTab.Section({Name = "Auto Load", Container = 2})
 
         local autoLoadConfigInput = SettingsTab.Input({
             Name = "Auto Load Config",
             Placeholder = "Config Name",
             Default = Linux.AutoLoadConfig,
+            Container = 2,
             Callback = function(text)
                 Linux.AutoLoadConfig = text
                 Linux.SaveAutoLoadSettings()
@@ -2810,9 +2790,9 @@ function Linux.Create(config)
         })
 
         local autoLoadToggle = SettingsTab.Toggle({
-            Name = "Auto Load",
-            Description = "Automatically load the specified config on startup",
+            Name = "Enable Auto Load",
             Default = Linux.AutoLoadEnabled,
+            Container = 2,
             Callback = function(state)
                 Linux.AutoLoadEnabled = state
                 Linux.SaveAutoLoadSettings()
@@ -2823,20 +2803,7 @@ function Linux.Create(config)
     if Linux.AutoLoadEnabled and Linux.AutoLoadConfig ~= "" then
         task.spawn(function()
             task.wait(1)
-            local success, result = Linux.LoadConfig(Linux.AutoLoadConfig)
-            if success then
-                Linux:Notify({
-                    Title = "Auto Load",
-                    Content = "Configuration '" .. Linux.AutoLoadConfig .. "' loaded automatically",
-                    Duration = 3
-                })
-            else
-                Linux:Notify({
-                    Title = "Auto Load Failed",
-                    Content = "Failed to load '" .. Linux.AutoLoadConfig .. "'",
-                    Duration = 5
-                })
-            end
+            Linux.LoadConfig(Linux.AutoLoadConfig)
         end)
     end
 
